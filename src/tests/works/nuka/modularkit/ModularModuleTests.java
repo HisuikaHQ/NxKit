@@ -117,7 +117,7 @@ public class ModularModuleTests {
     }
 
     @Test
-    void testStop() throws ModUuidEx, ModRegisterEx, ModSourceEx, ModRunEx {
+    void testStop() throws ModUuidEx, ModRegisterEx, ModSourceEx {
         ModularSource source = new ModularSource(TEST_UUID);
         source.registerModule(testModule);
         source.getModuleManager().runModule(testModule, () -> {

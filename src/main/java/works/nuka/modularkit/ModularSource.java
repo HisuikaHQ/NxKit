@@ -239,6 +239,7 @@ public class ModularSource {
     public boolean registerModule(ModularModule module) throws ModRegisterEx, ModUuidEx, ModSourceEx {
         if (!moduleMap.containsKey(module.getUuid())) {
             module.setModuleSource(this);
+            module.load(); // Call load() hook needed on later versions
             moduleMap.put(module.getUuid(), module);
 
         } else
@@ -257,7 +258,7 @@ public class ModularSource {
      * @throws ModSourceEx            - Can fail if null of incorrect.
      * @throws InstantiationException - Can return an error if the module is already
      *                                instanced.
-     * @throws IllegalAccessException - Can return a Ex if Illegal Access violation
+     * @throws IllegalAccessException - Can return an Ex if Illegal Access violation
      *                                subsist.
      * @since 1.0
      */
@@ -281,6 +282,7 @@ public class ModularSource {
             if (module.getModuleStatus() == ModuleStatus.RUNNING)
                 throw new ModRegisterEx("Failed to unregister the module : the module is running.");
             else {
+                module.unload(); // Call unload() hook needed on later versions
                 moduleMap.remove(module.getUuid(), module);
                 return true;
             }

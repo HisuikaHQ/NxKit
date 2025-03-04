@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>works.nuka</groupId>
     <artifactId>ModularKit</artifactId>
-    <version>1.7.0</version>
+    <version>1.7.1</version>
     <name>ModularKit</name>
     <url>https://modularkit.nuka.works</url>
     <description>
@@ -133,6 +133,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
 
@@ -166,6 +167,12 @@
             <artifactId>junit-jupiter-api</artifactId>
             <version>5.11.3</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>26.0.2</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

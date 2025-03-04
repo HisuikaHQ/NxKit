@@ -55,7 +55,6 @@ public abstract class ModularModule {
 
         if (_name.isEmpty())
             moduleName = "I Have a no-name !";
-
         else
             moduleName = _name;
     }

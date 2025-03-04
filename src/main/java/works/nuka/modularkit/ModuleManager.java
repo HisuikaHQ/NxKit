@@ -1,5 +1,7 @@
 package works.nuka.modularkit;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import works.nuka.modularkit.events.ModuleStatus;
 import works.nuka.modularkit.ex.*;
 
@@ -35,7 +37,7 @@ public class ModuleManager {
      * @since 1.0
      */
 
-    public synchronized boolean runModule(ModularModule module, Runnable onComplete) throws ModRegisterEx {
+    public synchronized boolean runModule(@NotNull ModularModule module, @Nullable Runnable onComplete) throws ModRegisterEx {
         HashMap<String, ModularModule> runMap = (HashMap<String, ModularModule>) modSource.getModuleMap();
         if (!runMap.isEmpty()) {
             if (runMap.containsKey(module.getUuid())) {
