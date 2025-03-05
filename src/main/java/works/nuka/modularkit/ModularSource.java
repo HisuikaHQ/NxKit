@@ -110,7 +110,7 @@ public class ModularSource {
         return null;
     }
 
-    private void loadModuleFile(Path file)
+    private ModularModule loadModuleFile(Path file)
             throws IOException,
             ClassNotFoundException,
             ModSourceEx,
@@ -129,11 +129,14 @@ public class ModularSource {
                 if (modClass.getSuperclass().getName().equals(ModularModule.class.getName())) {
                     ModularModule newModule = (ModularModule) modClass.getDeclaredConstructor().newInstance();
                     registerModule(newModule);
+                    return newModule;
                 } else {
                     throw new ModSourceEx("The module doesn't extends to ModularModule.");
                 }
             }
         }
+
+        return null;
     }
 
     private void indexModules(File path) throws IOException {
@@ -155,7 +158,7 @@ public class ModularSource {
      *
      * @param filePath The path to the file to process.
      */
-    public void processFile(Path filePath, String fileExtension)
+    public ModularModule processFile(Path filePath, String fileExtension)
             throws ModUuidEx,
             ModRegisterEx,
             IOException,
@@ -168,10 +171,10 @@ public class ModularSource {
     {
         File file = filePath.toFile();
         if (!file.isFile() || !file.getName().endsWith(fileExtension)) {
-            return; // Skip if not a file or doesn't match extension
+            return null; // Skip if not a file or doesn't match extension
         }
 
-        loadModuleFile(file.toPath());
+        return loadModuleFile(file.toPath());
     }
 
     /**
@@ -182,7 +185,7 @@ public class ModularSource {
      */
     protected ModularModule getModuleForFile(Path filePath) throws IOException, IllegalArgumentException, ModUuidEx {
         ModuleConfigFile moduleConfig = getFileModuleConfig(filePath);
-        String uuid = moduleConfig.getModuleProperties().keys().toString();
+        String uuid = moduleConfig.getModuleProperties().toString().replace("{", "").split("=")[0];
         if (uuid == null) throw new IllegalArgumentException("Uuid not found");
 
         return this.getModuleManager().findModuleByUuiD(uuid);
@@ -317,7 +320,6 @@ public class ModularSource {
      * @throws ModRegisterEx - Can fail if the module is null.
      */
     public boolean unregisterModule(ModularModule module) throws ModRegisterEx {
-        System.out.println(module.getModuleStatus());
         if (moduleMap.containsKey(module.getUuid())) {
             if (module.getModuleStatus() == ModuleStatus.RUNNING)
                 throw new ModRegisterEx("Failed to unregister the module : the module is running.");
