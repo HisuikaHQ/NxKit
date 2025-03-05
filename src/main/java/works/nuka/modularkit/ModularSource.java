@@ -79,8 +79,8 @@ public class ModularSource {
         registerSource();
     }
 
-    public ModularSource(String _uuid, File path, String fileExtension, boolean isFileWatcherEnabled, String uuid) throws ModUuidEx, ModSourceEx, IOException {
-        this.uuid = uuid;
+    public ModularSource(String _uuid, File path, String fileExtension, boolean isFileWatcherEnabled) throws ModUuidEx, ModSourceEx, IOException {
+        this.uuid = _uuid;
         ModularSource source = new ModularSource(_uuid, path, fileExtension);
 
         if (isFileWatcherEnabled) {
@@ -110,7 +110,7 @@ public class ModularSource {
         return null;
     }
 
-    private boolean loadModuleFile(Path file)
+    private void loadModuleFile(Path file)
             throws IOException,
             ClassNotFoundException,
             ModSourceEx,
@@ -134,11 +134,9 @@ public class ModularSource {
                 }
             }
         }
-
-        return true;
     }
 
-    private boolean indexModules(File path) throws IOException {
+    private void indexModules(File path) throws IOException {
         if (path.exists() && path.canRead()) {
             Files.walk(path.toPath()).forEach(e -> {
                 try {
@@ -150,8 +148,6 @@ public class ModularSource {
                 }
             });
         }
-
-        return true;
     }
 
     /**
