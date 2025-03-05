@@ -9,14 +9,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.nio.file.Path;
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class ModularSource {
@@ -25,6 +22,7 @@ public class ModularSource {
     private final HashMap<String, ModularModule> moduleMap = new HashMap<>();
     private final String uuid;
     private ModuleManager moduleManager;
+    private FileWatcher fileWatcher;
 
     /**
      * ModularSource - Create a collections of Modules.
@@ -58,7 +56,7 @@ public class ModularSource {
      * @param path  - File Path of the Modules Repository.
      * @throws ModUuidEx - Can return a ModUuidEx if UuID is incorrect or null.
      */
-    public ModularSource(String _uuid, File path, String fileExtension) throws ModUuidEx, ModSourceEx {
+    public ModularSource(String _uuid, File path, String fileExtension) throws ModUuidEx, ModSourceEx, IOException {
         if (_uuid == null)
             throw new ModUuidEx("uuid cannot be null.");
 
@@ -73,82 +71,125 @@ public class ModularSource {
         if (fileExtension.isEmpty())
             throw new ModSourceEx("You need to set a custom file extension !");
 
-        try {
-            this.moduleManager = new ModuleManager(this);
-        } catch (ModSourceEx modSourceEx) {
-            modSourceEx.printStackTrace();
-        }
-
         uuid = _uuid;
+        this.moduleManager = new ModuleManager(this);
 
-        if (path.exists() && path.canRead()) {
-            try {
-                Files.walk(path.toPath()).forEach(e -> {
-                    if (e.toFile().isFile()) {
-                        URLClassLoader classLoader = null;
+        indexModules(path);
+        // Finally, register the source !
+        registerSource();
+    }
 
-                        try {
-                            classLoader = new URLClassLoader(
-                                    new URL[]{new URL("file", null, e.toFile().getAbsolutePath())});
-                        } catch (MalformedURLException malformedURLException) {
-                            malformedURLException.printStackTrace();
-                        }
+    public ModularSource(String _uuid, File path, String fileExtension, boolean isFileWatcherEnabled, String uuid) throws ModUuidEx, ModSourceEx, IOException {
+        this.uuid = uuid;
+        ModularSource source = new ModularSource(_uuid, path, fileExtension);
 
-                        Properties extModRegistrationFile = new Properties();
+        if (isFileWatcherEnabled) {
+            fileWatcher = new FileWatcher(source, path.toPath(), fileExtension);
+        }
+    }
 
-                        try {
-                            assert classLoader != null; // Safe check if classLoader is null.
-                            InputStream inModlr = classLoader.getResourceAsStream(".modlr");
-                            if (inModlr != null) {
-                                extModRegistrationFile.load(inModlr);
-                            } else
-                                throw new IOException("File .modlr not found !");
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
-                        }
+    protected ModuleConfigFile getFileModuleConfig(Path file) throws IOException {
+        Properties extModRegistrationFile;
 
-                        for (Map.Entry<Object, Object> entry : extModRegistrationFile.entrySet()) {
-                            Class<?> modClass = null;
+        if (file.toFile().isFile()) {
+            URLClassLoader classLoader;
 
-                            try {
-                                modClass = Class.forName(entry.getValue().toString(), false, classLoader);
+            classLoader = new URLClassLoader(
+                    new URL[]{new URL("file", null, file.toFile().getAbsolutePath())});
 
-                            } catch (Exception classNotFoundException) {
-                                classNotFoundException.printStackTrace();
-                            }
+            extModRegistrationFile = new Properties();
+            InputStream inModlr = classLoader.getResourceAsStream(".modlr");
+            if (inModlr != null) {
+                extModRegistrationFile.load(inModlr);
+            } else {
+                throw new IOException("File .modlr not found !");
+            }
 
-                            assert modClass != null;
+            return new ModuleConfigFile(classLoader, extModRegistrationFile);
+        }
+        return null;
+    }
 
-                            if (modClass.getSuperclass().getName().equals(ModularModule.class.getName())) {
-                                ModularModule newModule = null;
-                                try {
-                                    newModule = (ModularModule) modClass.getDeclaredConstructor().newInstance();
-                                } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                                         | NoSuchMethodException ex) {
-                                    ex.printStackTrace();
-                                }
-                                try {
-                                    assert newModule != null;
-                                    registerModule(newModule);
-                                } catch (ModRegisterEx | ModUuidEx | ModSourceEx ex) {
-                                    ex.printStackTrace();
-                                }
-                            } else
-                                try {
-                                    throw new ModSourceEx("The module doesn't extends to ModularModule.");
-                                } catch (ModSourceEx ex) {
-                                    ex.printStackTrace();
-                                }
-                        }
-                    }
-                });
-            } catch (IOException e) {
-                e.printStackTrace();
+    private boolean loadModuleFile(Path file)
+            throws IOException,
+            ClassNotFoundException,
+            ModSourceEx,
+            ModUuidEx,
+            ModRegisterEx,
+            NoSuchMethodException,
+            InvocationTargetException,
+            InstantiationException,
+            IllegalAccessException {
+        if (file.toFile().isFile()) {
+            ModuleConfigFile configFile = getFileModuleConfig(file);
+
+            for (Map.Entry<Object, Object> entry : configFile.getModuleProperties().entrySet()) {
+                Class<?> modClass = Class.forName(entry.getValue().toString(), false, configFile.getClassLoader());
+
+                if (modClass.getSuperclass().getName().equals(ModularModule.class.getName())) {
+                    ModularModule newModule = (ModularModule) modClass.getDeclaredConstructor().newInstance();
+                    registerModule(newModule);
+                } else {
+                    throw new ModSourceEx("The module doesn't extends to ModularModule.");
+                }
             }
         }
 
-        // Finally, register the source !
-        registerSource();
+        return true;
+    }
+
+    private boolean indexModules(File path) throws IOException {
+        if (path.exists() && path.canRead()) {
+            Files.walk(path.toPath()).forEach(e -> {
+                try {
+                    loadModuleFile(e.toFile().toPath());
+                } catch (IOException | ClassNotFoundException | ModSourceEx | ModUuidEx | ModRegisterEx |
+                         NoSuchMethodException | InvocationTargetException | InstantiationException |
+                         IllegalAccessException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
+        }
+
+        return true;
+    }
+
+    /**
+     * Processes a single file, loading and registering its modules.
+     *
+     * @param filePath The path to the file to process.
+     */
+    public void processFile(Path filePath, String fileExtension)
+            throws ModUuidEx,
+            ModRegisterEx,
+            IOException,
+            ClassNotFoundException,
+            ModSourceEx,
+            InvocationTargetException,
+            NoSuchMethodException,
+            InstantiationException,
+            IllegalAccessException
+    {
+        File file = filePath.toFile();
+        if (!file.isFile() || !file.getName().endsWith(fileExtension)) {
+            return; // Skip if not a file or doesn't match extension
+        }
+
+        loadModuleFile(file.toPath());
+    }
+
+    /**
+     * Retrieves the list of modules associated with a file.
+     *
+     * @param filePath The path to the file.
+     * @return The list of modules, or null if none exist.
+     */
+    protected ModularModule getModuleForFile(Path filePath) throws IOException, IllegalArgumentException, ModUuidEx {
+        ModuleConfigFile moduleConfig = getFileModuleConfig(filePath);
+        String uuid = moduleConfig.getModuleProperties().keys().toString();
+        if (uuid == null) throw new IllegalArgumentException("Uuid not found");
+
+        return this.getModuleManager().findModuleByUuiD(uuid);
     }
 
     /**
@@ -195,6 +236,9 @@ public class ModularSource {
 
     private boolean unregisterSource() {
         if (sourceMap.containsKey(uuid)) {
+            if (fileWatcher != null) {
+                this.fileWatcher.stop();
+            }
             sourceMap.remove(uuid, this);
             return true;
         }
