@@ -45,7 +45,7 @@ class ModuleManagerTest {
         source.registerModule(module);
         assertTrue(moduleManager.runModule(module, null));
         // Simulate the module running in a thread, for testing purposes we can check if the thread was named correctly
-        assertTrue(Thread.getAllStackTraces().keySet().stream().anyMatch(t -> t.getName().equals("Mod_" + module.getModuleName() + "_" + module.getUuid())));
+        assertTrue(Thread.getAllStackTraces().keySet().stream().anyMatch(t -> t.getName().equals("Mod_" + module.getModuleConfig().getName() + "_" + module.getModuleConfig().getUuid())));
     }
 
     @Test
@@ -74,11 +74,11 @@ class ModuleManagerTest {
     }
 
     @Test
-    void testFindModuleByUuiD() throws Exception {
+    void testFindModuleByUUID() throws Exception {
         ModularModule module = new ModuleTest();
         source.registerModule(module);
-        assertEquals(module, moduleManager.findModuleByUuiD(module.getUuid()));
-        assertThrows(ModUuidEx.class, () -> moduleManager.findModuleByUuiD("invalidUUID"));
+        assertEquals(module, moduleManager.findModuleByUUID(module.getModuleConfig().getUuid()));
+        assertThrows(ModUuidEx.class, () -> moduleManager.findModuleByUUID("invalidUUID"));
     }
 
     @Test

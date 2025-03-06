@@ -7,12 +7,13 @@ import works.nuka.modularkit.ex.ModUuidEx;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @SuppressWarnings("unused")
@@ -56,7 +57,7 @@ public class ModularSource {
      * @param path  - File Path of the Modules Repository.
      * @throws ModUuidEx - Can return a ModUuidEx if UuID is incorrect or null.
      */
-    public ModularSource(String _uuid, File path, String fileExtension) throws ModUuidEx, ModSourceEx, IOException {
+    public ModularSource(String _uuid, File path, String fileExtension, boolean isFileWatcherEnabled) throws ModUuidEx, ModSourceEx, IOException {
         if (_uuid == null)
             throw new ModUuidEx("uuid cannot be null.");
 
@@ -77,19 +78,14 @@ public class ModularSource {
         indexModules(path);
         // Finally, register the source !
         registerSource();
-    }
-
-    public ModularSource(String _uuid, File path, String fileExtension, boolean isFileWatcherEnabled) throws ModUuidEx, ModSourceEx, IOException {
-        this.uuid = _uuid;
-        ModularSource source = new ModularSource(_uuid, path, fileExtension);
 
         if (isFileWatcherEnabled) {
-            fileWatcher = new FileWatcher(source, path.toPath(), fileExtension);
+            fileWatcher = new FileWatcher(this, path.toPath(), fileExtension);
         }
     }
 
     protected ModuleConfigFile getFileModuleConfig(Path file) throws IOException {
-        Properties extModRegistrationFile;
+        ModuleConfigModel moduleConfig;
 
         if (file.toFile().isFile()) {
             URLClassLoader classLoader;
@@ -97,15 +93,16 @@ public class ModularSource {
             classLoader = new URLClassLoader(
                     new URL[]{new URL("file", null, file.toFile().getAbsolutePath())});
 
-            extModRegistrationFile = new Properties();
-            InputStream inModlr = classLoader.getResourceAsStream(".modlr");
-            if (inModlr != null) {
-                extModRegistrationFile.load(inModlr);
-            } else {
-                throw new IOException("File .modlr not found !");
+            moduleConfig = new ModuleConfigModel();
+            String configFile;
+            try {
+                configFile = Files.readString(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource("module.json")).toURI()));
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
             }
+            moduleConfig.serialize(configFile);
 
-            return new ModuleConfigFile(classLoader, extModRegistrationFile);
+            return new ModuleConfigFile(classLoader, moduleConfig);
         }
         return null;
     }
@@ -123,16 +120,14 @@ public class ModularSource {
         if (file.toFile().isFile()) {
             ModuleConfigFile configFile = getFileModuleConfig(file);
 
-            for (Map.Entry<Object, Object> entry : configFile.getModuleProperties().entrySet()) {
-                Class<?> modClass = Class.forName(entry.getValue().toString(), false, configFile.getClassLoader());
+            Class<?> modClass = Class.forName(configFile.getModuleConfig().getMainClass(), false, configFile.getClassLoader());
 
-                if (modClass.getSuperclass().getName().equals(ModularModule.class.getName())) {
-                    ModularModule newModule = (ModularModule) modClass.getDeclaredConstructor().newInstance();
-                    registerModule(newModule);
-                    return newModule;
-                } else {
-                    throw new ModSourceEx("The module doesn't extends to ModularModule.");
-                }
+            if (modClass.getSuperclass().getName().equals(ModularModule.class.getName())) {
+                ModularModule newModule = (ModularModule) modClass.getDeclaredConstructor().newInstance();
+                registerModule(newModule);
+                return newModule;
+            } else {
+                throw new ModSourceEx("The module doesn't extends to ModularModule.");
             }
         }
 
@@ -167,8 +162,7 @@ public class ModularSource {
             InvocationTargetException,
             NoSuchMethodException,
             InstantiationException,
-            IllegalAccessException
-    {
+            IllegalAccessException {
         File file = filePath.toFile();
         if (!file.isFile() || !file.getName().endsWith(fileExtension)) {
             return null; // Skip if not a file or doesn't match extension
@@ -185,10 +179,10 @@ public class ModularSource {
      */
     protected ModularModule getModuleForFile(Path filePath) throws IOException, IllegalArgumentException, ModUuidEx {
         ModuleConfigFile moduleConfig = getFileModuleConfig(filePath);
-        String uuid = moduleConfig.getModuleProperties().toString().replace("{", "").split("=")[0];
+        String uuid = moduleConfig.getModuleConfig().toString().replace("{", "").split("=")[0];
         if (uuid == null) throw new IllegalArgumentException("Uuid not found");
 
-        return this.getModuleManager().findModuleByUuiD(uuid);
+        return this.getModuleManager().findModuleByUUID(uuid);
     }
 
     /**
@@ -280,10 +274,10 @@ public class ModularSource {
      * @since 1.0
      */
     public boolean registerModule(ModularModule module) throws ModRegisterEx, ModUuidEx, ModSourceEx {
-        if (!moduleMap.containsKey(module.getUuid())) {
+        if (!moduleMap.containsKey(module.getModuleConfig().getUuid())) {
             module.setModuleSource(this);
             module.load(); // Call load() hook needed on later versions
-            moduleMap.put(module.getUuid(), module);
+            moduleMap.put(module.getModuleConfig().getUuid(), module);
 
         } else
             throw new ModRegisterEx("Module already instantiated !");
@@ -320,12 +314,12 @@ public class ModularSource {
      * @throws ModRegisterEx - Can fail if the module is null.
      */
     public boolean unregisterModule(ModularModule module) throws ModRegisterEx {
-        if (moduleMap.containsKey(module.getUuid())) {
+        if (moduleMap.containsKey(module.getModuleConfig().getUuid())) {
             if (module.getModuleStatus() == ModuleStatus.RUNNING)
                 throw new ModRegisterEx("Failed to unregister the module : the module is running.");
             else {
                 module.unload(); // Call unload() hook needed on later versions
-                moduleMap.remove(module.getUuid(), module);
+                moduleMap.remove(module.getModuleConfig().getUuid(), module);
                 return true;
             }
         }

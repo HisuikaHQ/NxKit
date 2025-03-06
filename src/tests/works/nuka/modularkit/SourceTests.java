@@ -68,7 +68,7 @@ public class SourceTests {
         ModularSource source = new ModularSource(TEST_UUID);
         ModularModule module = new ModuleTest();
         source.registerModule(module);
-        assertTrue(source.getModuleMap().containsKey(module.getUuid()));
+        assertTrue(source.getModuleMap().containsKey(module.getModuleConfig().getUuid()));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class SourceTests {
         ModularModule module = new ModuleTest();
         source.registerModule(module);
         assertTrue(source.unregisterModule(module));
-        assertFalse(source.getModuleMap().containsKey(module.getUuid()));
+        assertFalse(source.getModuleMap().containsKey(module.getModuleConfig().getUuid()));
     }
 
     @Test

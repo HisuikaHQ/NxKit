@@ -40,7 +40,7 @@ public class ModuleManager {
     public synchronized boolean runModule(@NotNull ModularModule module, @Nullable Runnable onComplete) throws ModRegisterEx {
         HashMap<String, ModularModule> runMap = (HashMap<String, ModularModule>) modSource.getModuleMap();
         if (!runMap.isEmpty()) {
-            if (runMap.containsKey(module.getUuid())) {
+            if (runMap.containsKey(module.getModuleConfig().getUuid())) {
                 Thread runThread = getRunThread(module);
                 // Starting the module...
                 module.setModuleStatus(ModuleStatus.RUNNING); // Force RUNNING status
@@ -57,13 +57,13 @@ public class ModuleManager {
 
     private Thread getRunThread(ModularModule module) {
         Thread runThread = new Thread(module::exec);
-        runThread.setName("Mod_" + module.getModuleName() + "_" + module.getUuid());
+        runThread.setName("Mod_" + module.getModuleConfig().getName() + "_" + module.getModuleConfig().getUuid());
         return runThread;
     }
 
     public void runModule(String uuid, Runnable onComplete) throws ModRunEx {
         try {
-            ModularModule mod = findModuleByUuiD(uuid);
+            ModularModule mod = findModuleByUUID(uuid);
             if (mod == null)
                 throw new ModRunEx("Module not found !");
 
@@ -100,7 +100,7 @@ public class ModuleManager {
 
     public void stopModule(String uuid, @Deprecated boolean forceStop, Runnable onComplete) throws ModRunEx {
         try {
-            ModularModule mod = findModuleByUuiD(uuid);
+            ModularModule mod = findModuleByUUID(uuid);
             if (mod == null)
                 throw new ModRunEx("Module not found !");
 
@@ -119,7 +119,7 @@ public class ModuleManager {
      * @since 1.0
      */
 
-    public ModularModule findModuleByUuiD(String uuid) throws ModUuidEx {
+    public ModularModule findModuleByUUID(String uuid) throws ModUuidEx {
         if (uuid.length() == 8) {
             if (modSource.getModuleMap().containsKey(uuid))
                 return modSource.getModuleMap().get(uuid);
@@ -136,15 +136,15 @@ public class ModuleManager {
      */
 
     public void setDepends(ModularModule module, ModularModule... modDeps) throws ModSourceEx {
-        if (modulesDependencies.containsKey(module.getUuid())) {
+        if (modulesDependencies.containsKey(module.getModuleConfig().getUuid())) {
             throw new ModSourceEx("Cant update setDepends for... TODO");
         } else {
-            modulesDependencies.put(module.getUuid(), new ArrayList<>(List.of(modDeps)));
+            modulesDependencies.put(module.getModuleConfig().getUuid(), new ArrayList<>(List.of(modDeps)));
         }
     }
 
     public List<ModularModule> getDepends(ModularModule module) throws ModSourceEx {
-        ArrayList<ModularModule> modules = modulesDependencies.get(module.getUuid());
+        ArrayList<ModularModule> modules = modulesDependencies.get(module.getModuleConfig().getUuid());
         if (modules != null) return Collections.unmodifiableList(modules);
         else throw new ModSourceEx("Module not found");
     }

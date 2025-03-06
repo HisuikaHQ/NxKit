@@ -1,22 +1,21 @@
 package works.nuka.modularkit;
 
 import java.net.URLClassLoader;
-import java.util.Properties;
 
 public class ModuleConfigFile {
     private final URLClassLoader classLoader;
-    private final Properties moduleProperties;
+    private final ModuleConfigModel moduleConfig;
 
-    protected ModuleConfigFile(URLClassLoader classLoader, Properties moduleProperties) {
+    protected ModuleConfigFile(URLClassLoader classLoader, ModuleConfigModel moduleConfig) {
         this.classLoader = classLoader;
-        this.moduleProperties = moduleProperties;
+        this.moduleConfig = moduleConfig;
     }
 
     protected URLClassLoader getClassLoader() {
         return classLoader;
     }
 
-    protected Properties getModuleProperties() {
-        return moduleProperties;
+    protected ModuleConfigModel getModuleConfig() {
+        return moduleConfig;
     }
 }

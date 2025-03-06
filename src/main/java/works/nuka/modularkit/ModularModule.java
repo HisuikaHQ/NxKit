@@ -1,19 +1,12 @@
 package works.nuka.modularkit;
 
 import works.nuka.modularkit.events.ModuleStatus;
-import works.nuka.modularkit.ex.ModRunEx;
-import works.nuka.modularkit.ex.ModSourceEx;
-import works.nuka.modularkit.ex.ModUuidEx;
+import works.nuka.modularkit.ex.*;
 
 @SuppressWarnings("unused")
 
 public abstract class ModularModule {
-
-    private final String uuid; // The Module UuID, needed for find a unique module.
-    private final String moduleName; // module name.
-    private final String author; // module author name.
-    private final String version; // module version number.
-
+    private final ModuleConfigModel moduleConfig;
     private ModuleStatus modStatus = ModuleStatus.STOPPED; // Default module execution status.
     private ModularSource modSource;
     private final ModularModule[] moduleDependencies;
@@ -25,38 +18,26 @@ public abstract class ModularModule {
     /**
      * The ModularModule Module Object, the fabulous "ModularModule" !
      *
-     * @param _name   - Module Name.
-     * @param _uuid   - Module UuID.
-     * @param author  - Author of the Module.
-     * @param version - Module Version Number.
+     * @param moduleConfig - Pass the module configuration object.
      * @param modDeps - (Optional) Add Module Dependencies.
      * @throws ModUuidEx - Can return a ModUuidEx if the uuid is incorrect or null.
      * @since 1.0
      */
 
     public ModularModule(
-            String _name,
-            String _uuid,
-            String author,
-            String version,
+            ModuleConfigModel moduleConfig,
             ModularModule... modDeps
-    ) throws ModUuidEx {
-        this.author = author;
-        this.version = version;
+    ) throws ModUuidEx, ModRegisterEx {
         this.moduleDependencies = modDeps;
+        this.moduleConfig = moduleConfig;
 
-        if (_uuid == null)
+        if (moduleConfig.getUuid() == null)
             throw new ModUuidEx("uuid cannot be null.");
-
-        else if (_uuid.length() != 8)
+        else if (moduleConfig.getUuid().length() != 8)
             throw new ModUuidEx("uuid is incorrect !");
 
-        uuid = _uuid;
-
-        if (_name.isEmpty())
-            moduleName = "I Have a no-name !";
-        else
-            moduleName = _name;
+        if (moduleConfig.getName().isEmpty())
+            throw new ModRegisterEx("Module name is empty");
     }
 
     protected void setModuleSource(ModularSource source) throws ModSourceEx, ModUuidEx {
@@ -65,7 +46,7 @@ public abstract class ModularModule {
         else
             throw new ModSourceEx("ModSource cannot be null !");
 
-        if (modSource.getModuleManager().findModuleByUuiD(uuid) != null)
+        if (modSource.getModuleManager().findModuleByUUID(this.moduleConfig.getUuid()) != null)
             throw new ModUuidEx("Module already instantiated !");
 
         if (this.moduleDependencies != null && this.moduleDependencies.length > 0)
@@ -98,22 +79,6 @@ public abstract class ModularModule {
         modThread.stop();
     }
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public String getModuleName() {
-        return moduleName;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
     public String getThreadName() {
         return threadName;
     }
@@ -128,5 +93,9 @@ public abstract class ModularModule {
 
     private ModularSource getModSource() {
         return modSource;
+    }
+
+    public ModuleConfigModel getModuleConfig() {
+        return this.moduleConfig;
     }
 }

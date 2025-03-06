@@ -87,7 +87,7 @@ public class FileWatcher {
                     throw new RuntimeException(e);
                 }
 
-                filePathsMap.put(filePath, module.getUuid());
+                filePathsMap.put(filePath, module.getModuleConfig().getUuid());
             });
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -135,7 +135,7 @@ public class FileWatcher {
                         // Process the new file
                         ModularModule module = modularSource.processFile(fullPath, fileExtension);
                         if (!filePathsMap.containsKey(fullPath)) {
-                            filePathsMap.put(fullPath, module.getUuid());
+                            filePathsMap.put(fullPath, module.getModuleConfig().getUuid());
                         }
                     }
                 } else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
@@ -156,7 +156,7 @@ public class FileWatcher {
                     modularSource.processFile(fullPath, fileExtension);
                 } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
                     // File deleted
-                    ModularModule module = modularSource.getModuleManager().findModuleByUuiD(filePathsMap.get(fullPath));
+                    ModularModule module = modularSource.getModuleManager().findModuleByUUID(filePathsMap.get(fullPath));
                     if (module != null) {
                         try {
                             modularSource.unregisterModule(module);

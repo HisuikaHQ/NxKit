@@ -12,19 +12,27 @@ public class ModularModuleTests {
 
     private static final String TEST_UUID = "0123456a";
     private static final String TEST_NAME = "TestModule";
+    private static final String TEST_DESCRIPTION = "Test module";
     private static final String TEST_AUTHOR = "TestAuthor";
     private static final String TEST_VERSION = "1.0";
     private ModularModule testModule;
 
+    private final ModuleConfigModel configModule = new ModuleConfigModel()
+        .setName(TEST_NAME)
+        .setUuid(TEST_UUID)
+        .setVersion(TEST_VERSION)
+        .setDescription(TEST_DESCRIPTION)
+        .setAuthor(TEST_AUTHOR);
+
     // A concrete subclass for testing purposes
     private static class ConcreteModularModule extends ModularModule {
-        public ConcreteModularModule(String name, String uuid, String author, String version, ModularModule... modDeps) throws ModUuidEx {
-            super(name, uuid, author, version, modDeps);
+        public ConcreteModularModule(ModuleConfigModel configModel, ModularModule... modDeps) throws ModUuidEx, ModRegisterEx {
+            super(configModel, modDeps);
         }
 
         @Override
         protected void start() {
-            System.out.printf("Hello %s!%n", this.getModuleName());
+            System.out.printf("Hello %s!%n", this.getModuleConfig().getName());
             System.out.println("Thread name: " + Thread.currentThread().getName());
             try {
                 Thread.sleep(1000);
@@ -45,7 +53,7 @@ public class ModularModuleTests {
 
         @Override
         protected void stop() {
-            System.out.printf("Stopping %s...%n", this.getModuleName());
+            System.out.printf("Stopping %s...%n", this.getModuleConfig().getName());
         }
     }
 
@@ -62,16 +70,16 @@ public class ModularModuleTests {
 
     @Test
     void testConstructorWithValidParameters() {
-        assertEquals(TEST_NAME, testModule.getModuleName(), "Module name should match");
-        assertEquals(TEST_UUID, testModule.getUuid(), "Module UUID should match");
-        assertEquals(TEST_AUTHOR, testModule.getAuthor(), "Module author should match");
-        assertEquals(TEST_VERSION, testModule.getVersion(), "Module version should match");
+        assertEquals(TEST_NAME, testModule.getModuleConfig().getName(), "Module name should match");
+        assertEquals(TEST_UUID, testModule.getModuleConfig().getUuid(), "Module UUID should match");
+        assertEquals(TEST_AUTHOR, testModule.getModuleConfig().getAuthor(), "Module author should match");
+        assertEquals(TEST_VERSION, testModule.getModuleConfig().getVersion(), "Module version should match");
         assertEquals(ModuleStatus.STOPPED, testModule.getModuleStatus(), "Module should start stopped");
     }
 
     @Test
     void testConstructorWithNullUuid() {
-        assertThrows(ModUuidEx.class, () -> new ConcreteModularModule(TEST_NAME, null, TEST_AUTHOR, TEST_VERSION));
+        assertThrows(ModUuidEx.class, () -> new ConcreteModularModule(configModule));
     }
 
     @Test
@@ -81,15 +89,16 @@ public class ModularModuleTests {
 
     @Test
     void testConstructorWithEmptyName() throws ModUuidEx {
-        ModularModule emptyNameModule = new ConcreteModularModule("", TEST_UUID, TEST_AUTHOR, TEST_VERSION);
-        assertEquals("I Have a no-name !", emptyNameModule.getModuleName(), "Should set a default name when empty");
+        configModule.setName("");
+        ModularModule emptyNameModule = new ConcreteModularModule(configModule);
+        assertEquals("I Have a no-name !", emptyNameModule.getModuleConfig().getName(), "Should set a default name when empty");
     }
 
     @Test
     void testAddToModuleSource() throws ModSourceEx, ModUuidEx, ModRegisterEx {
         ModularSource source = new ModularSource(TEST_UUID);
         source.registerModule(testModule);
-        assertTrue(source.getUnmodifiableModuleMap().containsKey(testModule.getUuid()), "Should contains the module in the source");
+        assertTrue(source.getUnmodifiableModuleMap().containsKey(testModule.getModuleConfig().getUuid()), "Should contains the module in the source");
     }
 
     @Test
@@ -145,7 +154,19 @@ public class ModularModuleTests {
 
     @Test
     void testDependencies() throws ModUuidEx, ModRegisterEx, ModSourceEx {
-        ModularModule depMod = new ConcreteModularModule("DepModule", "0123456a", TEST_AUTHOR, TEST_VERSION);
+
+
+        ModuleConfigModel configDepMod = new ModuleConfigModel()
+        .setName("DepModule")
+        .setUuid("0123456a")
+        .setVersion(TEST_VERSION)
+        .setDescription(TEST_DESCRIPTION)
+        .setAuthor(TEST_AUTHOR);
+
+        ModularModule depMod = new ConcreteModularModule(configDepMod);
+
+
+
         testModule = new ConcreteModularModule(TEST_NAME, TEST_UUID, TEST_AUTHOR, TEST_VERSION, depMod);
 
         ModularSource source = new ModularSource(TEST_UUID);
