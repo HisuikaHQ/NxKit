@@ -58,8 +58,8 @@ public class ModularModuleTests {
     }
 
     @BeforeEach
-    void setUp() throws ModUuidEx {
-        testModule = new ConcreteModularModule(TEST_NAME, TEST_UUID, TEST_AUTHOR, TEST_VERSION);
+    void setUp() throws ModUuidEx, ModRegisterEx {
+        testModule = new ConcreteModularModule(configModule);
     }
 
     @AfterEach
@@ -84,14 +84,14 @@ public class ModularModuleTests {
 
     @Test
     void testConstructorWithInvalidUuidLength() {
-        assertThrows(ModUuidEx.class, () -> new ConcreteModularModule(TEST_NAME, "short", TEST_AUTHOR, TEST_VERSION));
+        configModule.setUuid("short");
+        assertThrows(ModUuidEx.class, () -> new ConcreteModularModule(configModule));
     }
 
     @Test
-    void testConstructorWithEmptyName() throws ModUuidEx {
+    void testConstructorWithEmptyName() throws ModUuidEx, ModRegisterEx {
         configModule.setName("");
-        ModularModule emptyNameModule = new ConcreteModularModule(configModule);
-        assertEquals("I Have a no-name !", emptyNameModule.getModuleConfig().getName(), "Should set a default name when empty");
+        assertThrows(ModRegisterEx.class, () -> new ConcreteModularModule(configModule), "Module name is empty");
     }
 
     @Test
@@ -109,7 +109,11 @@ public class ModularModuleTests {
     @Test
     void testSetModuleSourceWithExistingModule() throws ModRegisterEx, ModSourceEx, ModUuidEx {
         ModularSource source = new ModularSource(TEST_UUID);
-        ModularModule existingModule = new ConcreteModularModule("Existing", TEST_UUID, "Someone", "1.0");
+        configModule
+                .setName("Existing")
+                .setAuthor("Someone");
+
+        ModularModule existingModule = new ConcreteModularModule(configModule);
         source.registerModule(existingModule);
 
         // Expect this to throw because the UUID already exists in the source
@@ -154,8 +158,6 @@ public class ModularModuleTests {
 
     @Test
     void testDependencies() throws ModUuidEx, ModRegisterEx, ModSourceEx {
-
-
         ModuleConfigModel configDepMod = new ModuleConfigModel()
         .setName("DepModule")
         .setUuid("0123456a")
@@ -164,10 +166,7 @@ public class ModularModuleTests {
         .setAuthor(TEST_AUTHOR);
 
         ModularModule depMod = new ConcreteModularModule(configDepMod);
-
-
-
-        testModule = new ConcreteModularModule(TEST_NAME, TEST_UUID, TEST_AUTHOR, TEST_VERSION, depMod);
+        testModule = new ConcreteModularModule(configModule, depMod);
 
         ModularSource source = new ModularSource(TEST_UUID);
         source.registerModule(testModule);
