@@ -9,7 +9,6 @@ import works.nuka.modularkit.ex.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ModularModuleTests {
-
     private static final String TEST_UUID = "0123456a";
     private static final String TEST_NAME = "TestModule";
     private static final String TEST_DESCRIPTION = "Test module";
@@ -79,6 +78,7 @@ public class ModularModuleTests {
 
     @Test
     void testConstructorWithNullUuid() {
+        configModule.setUuid(null);
         assertThrows(ModUuidEx.class, () -> new ConcreteModularModule(configModule));
     }
 
