@@ -83,11 +83,15 @@ public class FileWatcher {
                 ModularModule module;
                 try {
                     module = modularSource.getModuleForFile(filePath);
+                    if (module != null) {
+                        filePathsMap.put(filePath, module.getModuleConfig().getUuid());
+                    } else {
+                        System.err.println("Module " + filePath + " not found or valid");
+                    }
                 } catch (IOException | ModUuidEx e) {
                     throw new RuntimeException(e);
                 }
 
-                filePathsMap.put(filePath, module.getModuleConfig().getUuid());
             });
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -134,7 +138,8 @@ public class FileWatcher {
                     } else if (Files.isRegularFile(fullPath)) {
                         // Process the new file
                         ModularModule module = modularSource.processFile(fullPath, fileExtension);
-                        if (!filePathsMap.containsKey(fullPath)) {
+
+                        if (!filePathsMap.containsKey(fullPath) && module != null) {
                             filePathsMap.put(fullPath, module.getModuleConfig().getUuid());
                         }
                     }
@@ -156,7 +161,13 @@ public class FileWatcher {
                     modularSource.processFile(fullPath, fileExtension);
                 } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
                     // File deleted
-                    ModularModule module = modularSource.getModuleManager().findModuleByUUID(filePathsMap.get(fullPath));
+                    String uuid = filePathsMap.get(fullPath);
+                    ModularModule module = null;
+
+                    if (uuid != null) {
+                        module = modularSource.getModuleManager().findModuleByUUID(uuid);
+                    }
+
                     if (module != null) {
                         try {
                             modularSource.unregisterModule(module);

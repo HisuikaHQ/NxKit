@@ -6,14 +6,16 @@ import works.nuka.modularkit.ex.*;
 @SuppressWarnings("unused")
 
 public abstract class ModularModule {
-    private final ModuleConfigModel moduleConfig;
+    private ModuleConfigModel moduleConfig;
     private ModuleStatus modStatus = ModuleStatus.STOPPED; // Default module execution status.
     private ModularSource modSource;
-    private final ModularModule[] moduleDependencies;
+    private ModularModule[] moduleDependencies;
 
     // Thread naming conventions : Mod_$name#$dynUuid_$uuid
     private String threadName;
     private Thread modThread;
+
+    public ModularModule() throws ModUuidEx, ModRegisterEx {}
 
     /**
      * The ModularModule Module Object, the fabulous "ModularModule" !
@@ -97,5 +99,9 @@ public abstract class ModularModule {
 
     public ModuleConfigModel getModuleConfig() {
         return this.moduleConfig;
+    }
+
+    protected void setModuleConfig(ModuleConfigModel moduleConfig) {
+        this.moduleConfig = moduleConfig;
     }
 }

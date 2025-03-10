@@ -1,12 +1,12 @@
 package works.nuka.modularkit;
 
+import org.jetbrains.annotations.NotNull;
 import works.nuka.modularkit.events.ModuleStatus;
 import works.nuka.modularkit.ex.ModRegisterEx;
 import works.nuka.modularkit.ex.ModSourceEx;
 import works.nuka.modularkit.ex.ModUuidEx;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class ModularSource {
@@ -89,19 +91,26 @@ public class ModularSource {
 
         if (file.toFile().isFile()) {
             URLClassLoader classLoader;
-
             classLoader = new URLClassLoader(
                     new URL[]{new URL("file", null, file.toFile().getAbsolutePath())});
 
             moduleConfig = new ModuleConfigModel();
-            String configFile;
-            try {
-                configFile = Files.readString(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource("module.json")).toURI()));
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
+            InputStream configFileInput = classLoader.getResourceAsStream("module.json");
+            if (configFileInput == null) {
+                System.err.println("ModularKit::getFileModuleConfig(): Error: Manifest file (module.json) not found!");
+                return null;
             }
-            moduleConfig.serialize(configFile);
 
+            // Peacefully read the config file
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(configFileInput))) {
+                String configFile = reader.lines().collect(Collectors.joining("\n"));
+                moduleConfig.serialize(configFile);
+            } catch (Exception e) {
+                System.err.println("ModularKit::getFileModuleConfig(): Error: " + e.getMessage());
+            }
+
+            System.out.println(moduleConfig.deserialize());
+            System.out.println(moduleConfig.getName() + moduleConfig.getUuid());
             return new ModuleConfigFile(classLoader, moduleConfig);
         }
         return null;
@@ -119,11 +128,23 @@ public class ModularSource {
             IllegalAccessException {
         if (file.toFile().isFile()) {
             ModuleConfigFile configFile = getFileModuleConfig(file);
+            if (configFile == null) {
+                System.err.println("ModularKit::loadModuleFile(): Error: Failed to get the module config file! (null)");
+                return null;
+            }
 
-            Class<?> modClass = Class.forName(configFile.getModuleConfig().getMainClass(), false, configFile.getClassLoader());
+            ModuleConfigModel configModel = configFile.getModuleConfig();
+            if (configModel == null) {
+                System.err.println("ModularKit::loadModuleFile(): Error: Failed to read config (null)");
+                return null;
+            }
 
+            Class<?> modClass = Class.forName(configModel.getMainClass(), false, configFile.getClassLoader());
             if (modClass.getSuperclass().getName().equals(ModularModule.class.getName())) {
                 ModularModule newModule = (ModularModule) modClass.getDeclaredConstructor().newInstance();
+
+                newModule.setModuleConfig(configModel);
+                // TODO: Impl dependency mgmt
                 registerModule(newModule);
                 return newModule;
             } else {
@@ -134,17 +155,19 @@ public class ModularSource {
         return null;
     }
 
-    private void indexModules(File path) throws IOException {
+    private void indexModules(File path) {
         if (path.exists() && path.canRead()) {
-            Files.walk(path.toPath()).forEach(e -> {
-                try {
-                    loadModuleFile(e.toFile().toPath());
-                } catch (IOException | ClassNotFoundException | ModSourceEx | ModUuidEx | ModRegisterEx |
-                         NoSuchMethodException | InvocationTargetException | InstantiationException |
-                         IllegalAccessException ex) {
-                    throw new RuntimeException(ex);
-                }
-            });
+            try (Stream<@NotNull Path> paths = Files.walk(path.toPath())) {
+                paths.forEach(e -> {
+                    try {
+                        loadModuleFile(e.toFile().toPath());
+                    } catch (Exception ex) {
+                        System.err.println("ModularKit::indexModules(): Error: Failed to load module file: " + e);
+                    }
+                });
+            } catch (Exception e) {
+                System.err.println("ModularKit::indexModules(): Error: Failed to parse source paths " + e);
+            }
         }
     }
 
@@ -179,7 +202,11 @@ public class ModularSource {
      */
     protected ModularModule getModuleForFile(Path filePath) throws IOException, IllegalArgumentException, ModUuidEx {
         ModuleConfigFile moduleConfig = getFileModuleConfig(filePath);
-        String uuid = moduleConfig.getModuleConfig().toString().replace("{", "").split("=")[0];
+        if (moduleConfig == null) {
+            return null;
+        }
+
+        String uuid = moduleConfig.getModuleConfig().getUuid();
         if (uuid == null) throw new IllegalArgumentException("Uuid not found");
 
         return this.getModuleManager().findModuleByUUID(uuid);

@@ -16,56 +16,68 @@ public class ModuleConfigModel extends BaseModel {
     @SerializedName("version")
     private String version;
 
-    protected String getName() {
+    @Override
+    public ModuleConfigModel serialize(String json) {
+        ModuleConfigModel model = (ModuleConfigModel) super.serialize(json);
+        this.setName(model.name);
+        this.setUuid(model.uuid);
+        this.setMainClass(model.mainClass);
+        this.setAuthor(model.author);
+        this.setDescription(model.description);
+        this.setVersion(model.version);
+        return this;
+    }
+
+    public String getName() {
         return name;
     }
 
-    protected String getUuid() {
+    public String getUuid() {
         return uuid;
     }
 
-    protected String getMainClass() {
+    public String getMainClass() {
         return mainClass;
     }
 
-    protected String getAuthor() {
+    public String getAuthor() {
         return author;
     }
 
-    protected String getDescription() {
+    public String getDescription() {
         return description;
     }
 
-    protected String getVersion() {
+    public String getVersion() {
         return version;
     }
 
-    public ModuleConfigModel setName(String name) {
+    protected ModuleConfigModel setName(String name) {
         this.name = name;
         return this;
     }
 
-    public ModuleConfigModel setUuid(String uuid) {
+    protected ModuleConfigModel setUuid(String uuid) {
         this.uuid = uuid;
         return this;
     }
 
-    public ModuleConfigModel setMainClass(String mainClass) {
+    protected ModuleConfigModel setMainClass(String mainClass) {
         this.mainClass = mainClass;
         return this;
     }
 
-    public ModuleConfigModel setAuthor(String author) {
+    protected ModuleConfigModel setAuthor(String author) {
         this.author = author;
         return this;
     }
 
-    public ModuleConfigModel setDescription(String description) {
+    protected ModuleConfigModel setDescription(String description) {
         this.description = description;
         return this;
     }
 
-    public ModuleConfigModel setVersion(String version) {
+    protected ModuleConfigModel setVersion(String version) {
         this.version = version;
         return this;
     }
