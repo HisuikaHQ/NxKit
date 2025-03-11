@@ -109,8 +109,6 @@ public class ModularSource {
                 System.err.println("ModularKit::getFileModuleConfig(): Error: " + e.getMessage());
             }
 
-            System.out.println(moduleConfig.deserialize());
-            System.out.println(moduleConfig.getName() + moduleConfig.getUuid());
             return new ModuleConfigFile(classLoader, moduleConfig);
         }
         return null;
