@@ -1,10 +1,6 @@
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4eff78558cbc47c0b929dd1c45d12bda)](https://www.codacy.com/gh/NukaWorks/ModularKit/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=NukaWorks/ModularKit&amp;utm_campaign=Badge_Grade)
-[![Nightly Builder](https://github.com/NukaWorks/ModularKit/actions/workflows/prebuild-nightly.yml/badge.svg?branch=main)](https://github.com/NutDevs-org/ModularKit/actions/workflows/prebuild-nightly.yml)
-[![CodeQL](https://github.com/NukaWorks/ModularKit/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/NukaWorks/ModularKit/actions/workflows/codeql-analysis.yml)
+
 ![Maven Central](https://img.shields.io/maven-central/v/works.nuka/ModularKit)
-![Lines of code](https://img.shields.io/tokei/lines/github/NukaWorks/ModularKit?label=Total%20Lines%20Of%20Codes%20%3A)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/NukaWorks/ModularKit)
-![GitHub Licence](https://img.shields.io/github/license/NutDevs-org/ModularKit)
+
 
 # ModularKit
 
@@ -17,13 +13,10 @@ With ModularKit, you can create modular apps with increased flexibility and
 stability, designed to create projects without server shutdown and a good
 maintainability.
 
-Checkout the documentation on the documentation folder: *
-*[docs](https://github.com/NukaWorks/ModularKit/tree/main/docs/).**
-
 ## Getting started
 
 First, you need to create a new project (maven recommended) and add **ModularKit** dependency :
-
+or you can clone this project: [https://git.nuka.works/nukaworks/toolkits/ModuleTest](https://git.nuka.works/nukaworks/toolkits/ModuleTest)
 ### For creating a modular-based app (Client side) :
 
 ```xml
@@ -49,15 +42,9 @@ First, you need to create a new project (maven recommended) and add **ModularKit
 </dependency>
 ```
 
-#### Or use the ModuleTemplate
-
-Use this ModuleTemplate : https://github.com/NukaWorks/ModuleTest
-
 ## Examples
 
-### How to create a Modular hello-world
-
-First example : **HelloWorld** !
+### hello-world
 
 ```java
 package com.example;
@@ -67,35 +54,29 @@ import works.nuka.modularkit.ModularModule;
 public class ModuleTest extends ModularModule {
 
     public ModuleTest() throws Exception {
-        super("ModuleTest", "81f9ab59", "Sundev79", "1.0.0");
+        super();
     }
 
     @Override
-    public void runEvent() {
-        System.out.println("Hello World !");
-    }
-}
-```
-
-An example with module-dependencies : you can add others dependant module by this way :
-
-```java
-package com.example;
-
-import works.nuka.modularkit.ModularModule;
-
-public class ModuleTest extends ModularModule {
-    public ModuleTest() {
-        AnotherModule anotherMod = new AnotherModule();
-        AnotherModule anotherMod2 = new AnotherModule();
-
-        super("ModuleTest", "81f9ab59", "Sundev79", "1.0.0", anotherMod, anotherMod2);
-        // You can use Module dependencies !
+    protected void start() {
+        System.out.println("Hello " + this.getModuleConfig().getName() + " !");
     }
 
     @Override
-    public void runEvent() {
-        System.out.println("Hello World with module-dependencies !");
+    protected void stop() {
+        System.out.println("Goodbye " + this.getModuleConfig().getName() + " !");
+    }
+
+    @Override
+    protected void load() {
+        System.out.println("Loaded " + this.getModuleConfig().getName() + " !");
+
+    }
+
+    @Override
+    protected void unload() {
+        System.out.println("Unloaded " + this.getModuleConfig().getName() + " !");
+
     }
 }
 ```
@@ -122,7 +103,7 @@ public class Main {
 }
 ```
 
-For ModSource and Module you need to generate a new uuid (Group 1).
+For sources and modules you need to generate a new uuid (Group 1).
 
 #### MacOS/Linux and others unix systems
 
@@ -137,10 +118,3 @@ For ModSource and Module you need to generate a new uuid (Group 1).
 You can use **https://www.uuidgenerator.net/**
 
 ⚠ **You need to copy the group 1 of the uuid.**
-
-#### You can find the full documentation on the directory : *
-*[docs](https://github.com/NukaWorks/ModularKit/tree/main/docs/)**
-
-# Social links
-
-***[See on Powerm1nt Profile](https://github.com/Powerm1nt#--lets-talk-with-me-on)***
