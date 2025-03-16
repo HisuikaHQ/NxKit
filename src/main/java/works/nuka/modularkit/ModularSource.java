@@ -160,7 +160,7 @@ public class ModularSource {
                     try {
                         loadModuleFile(e.toFile().toPath());
                     } catch (Exception ex) {
-                        System.err.println("ModularKit::indexModules(): Error: Failed to load module file: " + e);
+                        System.err.println("ModularKit::indexModules(): Error: Failed to load module file: " + ex);
                     }
                 });
             } catch (Exception e) {
