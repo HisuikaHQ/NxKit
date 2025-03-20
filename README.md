@@ -127,11 +127,11 @@ Fork [ModuleTest](https://git.nuka.works/nukaworks/toolkits/ModuleTest) and edit
 
 In your app, implement an external source:
 ```java
-    ...
+// ...
     
-    ModularSource src = new ModularSource(generateLittleUuid(), sourceDir, ".jar", config.fileWatcher);
+ModularSource src = new ModularSource(generateLittleUuid(), sourceDir, ".jar", config.fileWatcher);
     
-    ...
+// ...
 ```
 
 #### UUIDGEN Online
