@@ -20,7 +20,6 @@ or you can clone this project: [https://git.nuka.works/nukaworks/toolkits/Module
 ### To implement ModularKit in your app (Client side):
 
 ```xml
-
 <dependency>
     <groupId>works.nuka</groupId>
     <artifactId>ModularKit</artifactId>
@@ -33,7 +32,6 @@ or you can clone this project: [https://git.nuka.works/nukaworks/toolkits/Module
 #### Create manualy
 
 ```xml
-
 <dependency>
     <groupId>works.nuka</groupId>
     <artifactId>ModularKit</artifactId>
