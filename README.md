@@ -115,7 +115,7 @@ For sources and modules you need to generate a new uuid (Group 1).
 
 To run external modules (.jar), checkout [CoffeeLoader](https://git.nuka.works/nukaworks/servers/CoffeeLoader) or proceed:
 
-Fork ModuleTest and edit modules.json under the resources folder:
+Fork [ModuleTest](https://git.nuka.works/nukaworks/toolkits/ModuleTest) and edit modules.json under the resources folder:
 ```json
 {
   "name": "ModuleTest",
