@@ -83,7 +83,7 @@ public class ModuleTest extends ModularModule {
 
 ### For registering and run a module
 
-For running a module, let's try this little example :
+For running a internal module, let's try this little example :
 
 ```java
 import works.nuka.modularkit.ModularSource;
@@ -113,8 +113,22 @@ For sources and modules you need to generate a new uuid (Group 1).
 ~$
 ```
 
+To run external modules (.jar), checkout [CoffeeLoader](https://git.nuka.works/nukaworks/servers/CoffeeLoader) or proceed:
+```java
+    ...
+    
+    ModularSource src = new ModularSource(generateLittleUuid(), sourceDir, ".jar", config.fileWatcher);
+    
+    ...
+```
+
+
 #### UUIDGEN Online
 
 You can use **https://www.uuidgenerator.net/**
 
 ⚠ **You need to copy the group 1 of the uuid.**
+
+### Need more?
+Go on our **[developer documentation center](https://developer.nuka.works/)** and checkout **ModularKit**, you can find more
+documentation, code example and support.
