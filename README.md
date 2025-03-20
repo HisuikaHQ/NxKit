@@ -29,7 +29,7 @@ or you can clone this project: [https://git.nuka.works/nukaworks/toolkits/Module
 
 ### For create your module (Module side):
 
-#### Create manualy
+#### Create manually
 
 ```xml
 <dependency>
