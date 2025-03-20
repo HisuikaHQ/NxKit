@@ -17,7 +17,7 @@ maintainability.
 
 First, you need to create a new project (maven recommended) and add **ModularKit** dependency :
 or you can clone this project: [https://git.nuka.works/nukaworks/toolkits/ModuleTest](https://git.nuka.works/nukaworks/toolkits/ModuleTest)
-### For creating a modular-based app (Client side) :
+### To implement ModularKit in your app (Client side):
 
 ```xml
 
@@ -28,7 +28,7 @@ or you can clone this project: [https://git.nuka.works/nukaworks/toolkits/Module
 </dependency>
 ```
 
-### For external module (Module side) :
+### For create your module (Module side):
 
 #### Create manualy
 
@@ -83,7 +83,7 @@ public class ModuleTest extends ModularModule {
 
 ### For registering and run a module
 
-For running a internal module, let's try this little example :
+For running an internal module, let's try this little example :
 
 ```java
 import works.nuka.modularkit.ModularSource;
