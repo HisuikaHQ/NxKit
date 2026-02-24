@@ -58,6 +58,10 @@ public class ModuleManager {
     private Thread getRunThread(ModularModule module) {
         Thread runThread = new Thread(module::exec);
         runThread.setName("Mod_" + module.getModuleConfig().getName() + "_" + module.getModuleConfig().getUuid());
+        ClassLoader moduleClassLoader = module.getModuleClassLoader();
+        if (moduleClassLoader != null) {
+            runThread.setContextClassLoader(moduleClassLoader);
+        }
         return runThread;
     }
 

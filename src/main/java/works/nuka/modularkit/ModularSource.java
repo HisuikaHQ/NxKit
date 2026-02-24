@@ -92,7 +92,9 @@ public class ModularSource {
         if (file.toFile().isFile()) {
             URLClassLoader classLoader;
             classLoader = new URLClassLoader(
-                    new URL[]{new URL("file", null, file.toFile().getAbsolutePath())});
+                    new URL[]{new URL("file", null, file.toFile().getAbsolutePath())},
+                    ModularSource.class.getClassLoader()  // parent: host classloader so ModularModule is visible
+            );
 
             moduleConfig = new ModuleConfigModel();
             InputStream configFileInput = classLoader.getResourceAsStream("module.json");
@@ -142,6 +144,7 @@ public class ModularSource {
                 ModularModule newModule = (ModularModule) modClass.getDeclaredConstructor().newInstance();
 
                 newModule.setModuleConfig(configModel);
+                newModule.setModuleClassLoader(configFile.getClassLoader());
                 // TODO: Impl dependency mgmt
                 registerModule(newModule);
                 return newModule;

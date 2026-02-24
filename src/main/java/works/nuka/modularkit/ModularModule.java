@@ -10,7 +10,7 @@ public abstract class ModularModule {
     private ModuleStatus modStatus = ModuleStatus.STOPPED; // Default module execution status.
     private ModularSource modSource;
     private ModularModule[] moduleDependencies;
-
+    private ClassLoader moduleClassLoader;
     // Thread naming conventions : Mod_$name#$dynUuid_$uuid
     private String threadName;
     private Thread modThread;
@@ -61,6 +61,16 @@ public abstract class ModularModule {
         threadName = modThread.getName();
 
         start();
+    }
+
+    /** Returns the ClassLoader used to load this module's jar, or null if not set. */
+    public ClassLoader getModuleClassLoader() {
+        return moduleClassLoader;
+    }
+
+    /** Called by ModularSource after loading the module class to register its URLClassLoader. */
+    public void setModuleClassLoader(ClassLoader classLoader) {
+        this.moduleClassLoader = classLoader;
     }
 
     /**
